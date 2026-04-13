@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>גמ"ח כלי עבודה</title>
+    <style>
+        :root {
+            --primary: #ffffff; --secondary: #f1f3f4; --accent: #1a73e8; --success: #1e8e3e; --danger: #d93025; --bg: #f8f9fa; --text-main: #202124; --text-muted: #5f6368; --border-color: #dadce0; --hover-bg: rgba(26,115,232,0.04); --selected-bg: rgba(26,115,232,0.12);
+        }
+        body { font-family: system-ui, -apple-system, sans-serif; font-size: 16px; background: var(--bg); color: var(--text-main); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header { background: var(--primary); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .header-title { font-size: 22px; font-weight: 500; color: var(--text-muted); }
+        .stats-badge { background: var(--secondary); padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+        .stats-badge:hover { background: var(--hover-bg); border-color: var(--accent); color: var(--accent); }
+        .tabs-nav { background: var(--primary); display: flex; justify-content: space-between; align-items: center; padding: 0 16px; border-bottom: 1px solid var(--border-color); }
+        .tab-btn { background: none; border: none; padding: 8px 20px; cursor: pointer; font-size: 14px; color: var(--text-muted); border-radius: 20px; transition: all 0.2s; font-weight: 500; margin: 4px 2px; }
+        .tab-btn.active { color: var(--accent); background: var(--selected-bg); }
+        .tab-btn:hover:not(.active) { background: var(--hover-bg); }
+        .main-content { flex-grow: 1; overflow: hidden; position: relative; padding: 16px; box-sizing: border-box; }
+        .tab-pane { display: none; height: 100%; box-sizing: border-box; flex-direction: column; gap: 16px; }
+        .tab-pane.active { display: flex; }
+        .section { background: white; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(60,64,67,0.05); display: flex; flex-direction: column; overflow: hidden; min-height: 0; flex: 1; }
+        .search-bar { padding: 12px 16px; background: white; border-bottom: 1px solid var(--border-color); display: flex; gap: 12px; align-items: center; flex-shrink: 0; }
+        .search-container { position: relative; flex-grow: 1; display: flex; align-items: center; }
+        .search-bar input { padding: 10px 16px 10px 35px; border: 1px solid var(--border-color); border-radius: 24px; width: 100%; font-size: 15px; box-sizing: border-box; text-align: right; background: var(--secondary); transition: all 0.2s; font-family: inherit; }
+        .search-bar input:focus { background: white; box-shadow: 0 1px 6px rgba(32,33,36,.28); border-color: transparent; outline: none; }
+        .clear-btn { position: absolute; left: 12px; background: transparent; color: var(--text-muted); border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 5; }
+        .search-bar input:not(:placeholder-shown) + .clear-btn { display: flex; }
+        .table-wrap { flex-grow: 1; overflow-y: auto; background: white; }
+        table { width: 100%; border-collapse: collapse; text-align: right; table-layout: fixed; }
+        th { position: sticky; top: 0; background: white; color: var(--text-muted); padding: 8px 16px; z-index: 10; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; }
+        td { padding: 6px 16px; border-bottom: 1px solid var(--border-color); font-size: 15px; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        tr:hover { background-color: var(--hover-bg); cursor: pointer; }
+        tr.selected { background-color: var(--selected-bg) !important; font-weight: bold; }
+        .row-borrowed { background-color: #f8f9fa !important; }
+        .row-borrowed td { color: #9aa0a6; }
+        .row-borrowed:hover { cursor: not-allowed; }
+        .row-borrowed .status-tag.borrowed { background: transparent; border: 1px solid #e8eaed; color: #9aa0a6; }
+        #reportTableBody tr.focused-row { background-color: var(--selected-bg) !important; border-right: 4px solid var(--accent); opacity: 1 !important; }
+        #reportTableBody.has-selection tr:not(.focused-row) { opacity: 0.35; filter: grayscale(0.6); }
+        #reportTableBody.has-selection tr:not(.focused-row) button { pointer-events: none; }
+        .btn { border: none; padding: 8px 16px; border-radius: 24px; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 14px; transition: all 0.2s; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+        .btn-add { background: var(--success); color: white; box-shadow: 0 1px 2px rgba(60,64,67,0.3); padding: 8px 20px; }
+        .btn-icon-add { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 40px; height: 40px; border-radius: 50%; background: white; border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; padding: 0; flex-shrink: 0; box-shadow: 0 1px 2px rgba(60,64,67,0.05); }
+        .btn-icon-add:hover { background: var(--hover-bg); border-color: var(--accent); color: var(--accent); box-shadow: 0 1px 3px rgba(26,115,232,0.15); }
+        .btn-icon-add svg { fill: currentColor; width: 24px; height: 24px; display: block; }
+        .btn-main { background: var(--accent); color: white; font-size: 15px; padding: 10px 32px; box-shadow: 0 1px 2px rgba(26,115,232,0.3); }
+        .btn-export { background: #e8f0fe; color: #1a73e8; border: 1px solid transparent; }
+        .btn-outline { background: white; color: var(--text-muted); border: 1px solid var(--border-color); font-size: 14px; }
+        .btn-danger { background: rgba(217, 48, 37, 0.1); color: var(--danger); border: none; padding: 4px 14px; font-size: 13px; font-weight: 500; border-radius: 16px; cursor: pointer; }
+        .status-tag { padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; display: inline-block; }
+        .available { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+        .borrowed { background: var(--secondary); color: var(--text-muted); }
+        .free-tag { background: var(--secondary); color: var(--text-muted); border: 1px solid transparent; }
+        .action-bar { background: white; padding: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-top: auto; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(32,33,36,0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .modal-body { background: white; padding: 32px; border-radius: 8px; width: 400px; box-shadow: 0 24px 38px rgba(0,0,0,0.14); }
+        .modal-body.large { width: 80%; max-width: 900px; max-height: 85vh; display: flex; flex-direction: column; }
+        .modal-body h3 { margin-top: 0; margin-bottom: 20px; color: var(--text-main); }
+        .modal-body input { width: 100%; padding: 12px 16px; margin: 8px 0 16px; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 15px; }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #323232; color: white; padding: 14px 24px; border-radius: 4px; display: none; z-index: 3000; font-size: 15px; box-shadow: 0 3px 5px rgba(0,0,0,0.2); }
+        #undoBtn { background: white; border: 1px solid var(--border-color); margin-left: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); color: var(--text-main); }
+        #manageToolsBody td, #manageBorrowersBody td, #activeLoansBody td { padding: 2px 12px; height: 30px; font-size: 14px; }
+        #manageToolsBody button, #manageBorrowersBody button, #wishlistBody button { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 10px; border-radius: 4px; color: #80868b; font-weight: bold; transition: all 0.2s; }
+        #manageToolsBody button:hover, #manageBorrowersBody button:hover, #wishlistBody button:hover { background-color: #e8f0fe; color: #1a73e8; }
+        .del-btn:hover { background-color: #fce8e6 !important; color: #d93025 !important; }
+        .sortable { cursor: pointer; user-select: none; }
+        .sortable:hover { background-color: var(--hover-bg); }
+        .sort-indicator { display: inline-block; margin-right: 5px; color: var(--accent); font-weight: bold; }
+        @media print { .tabs-nav, .action-bar, .search-bar, button, .header { display: none !important; } body, .main-content, .tab-pane, .section { overflow: visible; height: auto; padding: 0; margin: 0; box-shadow: none; border: none; } .tab-pane.active { display: block; } table { border: 1px solid #ccc; } th, td { border: 1px solid #ccc; padding: 8px; } @page { margin: 1cm; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-title">גמ"ח כלי עבודה</div>
+</div>
+
+<div class="tabs-nav">
+    <div style="display: flex;">
+        <button class="tab-btn active" onclick="switchTab('ops-tab')">השאלה/החזרה</button>
+        <button class="tab-btn" onclick="switchTab('history-tab')">נתונים</button> 
+        <button class="tab-btn" onclick="switchTab('manage-tab')">ניהול</button>
+        <button class="tab-btn" onclick="switchTab('backup-tab')">גיבוי</button>
+    </div>
+    <button id="undoBtn" class="btn" onclick="handleUndo()" title="ביטול פעולה אחרונה (Ctrl+Z)" disabled>↩ ביטול פעולה</button>
+</div>
+
+<div class="main-content">
+    
+    <!-- מסך השאלה והחזרה -->
+    <div id="ops-tab" class="tab-pane active">
+        <div class="section" style="flex: 1.4;">
+            <div class="search-bar">
+                <div class="search-container">
+                    <input type="text" id="toolSearch" placeholder="חיפוש כלי (שם, סידורי, וכו')..." oninput="renderOpsTools()">
+                    <button class="clear-btn" onclick="clearSearch('toolSearch', renderOpsTools)">✕</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <colgroup><col style="width:20%"><col style="width:20%"><col style="width:15%"><col style="width:15%"><col style="width:20%"><col style="width:10%"></colgroup>
+                    <thead><tr><th>כלי</th><th>תיאור</th><th>סידורי</th><th>סטטוס</th><th>אצל</th><th>ימים</th></tr></thead>
+                    <tbody id="opsToolsBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 16px; flex: 1; min-height: 0;">
+            <div class="section" style="flex: 1.2;">
+                <div class="search-bar">
+                    <div class="search-container">
+                        <input type="text" id="borrSearch" placeholder="חיפוש שואל (שם, טלפון, וכו')..." oninput="renderOpsBorrowers()">
+                        <button class="clear-btn" onclick="clearSearch('borrSearch', renderOpsBorrowers)">✕</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table><thead><tr><th>שם השואל</th><th>כתובת</th><th>טלפון</th></tr></thead><tbody id="opsBorrowersBody"></tbody></table>
+                </div>
+            </div>
+            <div class="section" style="flex: 0.8;">
+                <div class="search-bar">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <b id="activeLoansTitle" style="color: var(--text-muted); font-size: 15px;">כלים מושאלים אצל: -</b>
+                        <button id="addFreeItemBtn" class="btn-icon-add" style="display:none; width: 32px; height: 32px;" onclick="addFreeLoan(this)" title="הוספת פריט חופשי למשתמש זה">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
+                        </button>                    
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table><thead><tr><th>כלי</th><th>ימים</th><th></th></tr></thead><tbody id="activeLoansBody"></tbody></table>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <div style="color: var(--text-muted); font-size: 16px; flex: 1;">כלי: <b id="selT" style="color: var(--text-main);">-</b> | שואל: <b id="selB" style="color: var(--text-main);">-</b></div>
+            <div style="flex: 1; text-align: center;"><button id="borrowBtn" class="btn btn-main" disabled onclick="confirmBorrow()">בצע השאלה</button></div>
+            <div style="flex: 1; display: flex; justify-content: flex-end;"><div id="quick-stats-head" class="stats-badge" onclick="openReportModal()" title='לחץ לצפייה בדו"ח מושאלים מלא'>טוען נתונים...</div></div>
+        </div>
+    </div> 
+
+    <!-- מסך ניהול נתונים -->
+    <div id="manage-tab" class="tab-pane">
+        <div style="display: flex; gap: 16px; height: 100%;">
+            <div class="section">
+                <div class="search-bar">
+                    <div class="search-container"><input type="text" id="mToolSearch" placeholder="חיפוש כלים..." oninput="renderManageTools()"><button class="clear-btn" onclick="clearSearch('mToolSearch', renderManageTools)">✕</button></div>
+                    <button class="btn-icon-add" onclick="openToolModal()" title="הוסף כלי חדש"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg></button>                
+                </div>
+                <div class="table-wrap"><table><thead><tr><th>שם</th><th>תיאור</th><th>סידורי</th><th>פעולות</th></tr></thead><tbody id="manageToolsBody"></tbody></table></div>
+            </div>
+            <div class="section">
+                <div class="search-bar">
+                    <div class="search-container"><input type="text" id="mBorrSearch" placeholder="חיפוש שואלים..." oninput="renderManageBorrowers()"><button class="clear-btn" onclick="clearSearch('mBorrSearch', renderManageBorrowers)">✕</button></div>
+                    <button class="btn-icon-add" onclick="openBorrowerModal()" title="הוסף שואל חדש"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg></button>                
+                </div>
+                <div class="table-wrap"><table><thead><tr><th>שם</th><th>כתובת</th><th>טלפון</th><th>פעולות</th></tr></thead><tbody id="manageBorrowersBody"></tbody></table></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- מסך היסטוריה וסטטיסטיקה -->
+    <div id="history-tab" class="tab-pane">
+        <div style="display: flex; gap: 16px; height: 100%;">
+            <div class="section" style="flex: 1.5;">
+                <div class="search-bar">
+                    <div class="search-container"><input type="text" id="histS" placeholder="יומן השאלות - חיפוש..." oninput="renderHistory()"><button class="clear-btn" onclick="clearSearch('histS', renderHistory)">✕</button></div>
+                </div>
+                <div class="table-wrap"><table><thead><tr><th>שם השואל</th><th>כלי</th><th>תיאור כלי</th><th>תאריך</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;"> 
+                <div class="section" style="flex: 1;"><div class="search-bar"><b style="color: var(--text-muted); font-size: 15px;">השאלות לפי כלי</b></div><div class="table-wrap"><table><thead><tr><th>שם הכלי</th><th>סך הכל</th></tr></thead><tbody id="statsBody"></tbody></table></div></div>
+                <div class="section" style="flex: 1;">
+                    <div class="search-bar" style="gap: 8px;">
+                        <b style="color: var(--text-muted); font-size: 15px; white-space: nowrap;">רשימת ביקושים</b>
+                        <input type="text" id="wishInput" placeholder="הוסף..." oninput="renderWishlist()" onkeydown="if(event.key==='Enter') addToWishlist()" style="padding: 4px 12px; border-radius: 15px; border: 1px solid var(--border-color); font-size: 13px; flex-grow: 1;">
+                        <button class="btn-icon-add" style="width: 32px; height: 32px;" onclick="addToWishlist()" title="הוסף לרשימה"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" style="width:20px; height:20px;"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg></button>                
+                    </div>
+                    <div class="table-wrap"><table><thead><tr><th>כלי מבוקש</th><th>ביקוש</th><th>פעולה</th></tr></thead><tbody id="wishlistBody"></tbody></table></div>
+                </div>
+            </div> 
+        </div>
+    </div>
+
+    <!-- מסך גיבוי נתונים -->
+    <div id="backup-tab" class="tab-pane">
+        <div style="max-width: 850px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 15px; padding: 10px; overflow-y: auto; height: 100%;">
+            <div class="section" style="padding: 24px 20px; flex: none; text-align: center;">
+                <h3 style="margin: 0 0 8px 0; color: var(--accent); font-size: 20px;">גיבוי בפורמט JSON</h3>
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: var(--text-muted);">גיבוי ושחזור כל הנתונים בקובץ יחיד</p>
+                <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 12px;">
+                    <button class="btn btn-main" style="min-width: 200px; font-size: 16px;" onclick="exportFullBackupJSON()">ייצוא גיבוי מלא</button>
+                    <button class="btn btn-outline" style="min-width: 200px; font-size: 16px; color: var(--accent); border-color: var(--accent);" onclick="triggerFullImport()">ייבוא גיבוי מלא</button>
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;" id="lastBackupDisplay">טרם בוצע גיבוי במחשב זה</div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; flex: none;">
+                <div class="section" style="padding: 15px;">
+                    <h4 style="margin: 0 0 12px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; color: var(--text-main); text-align: center;">ייצוא בפורמט CSV</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <button class="btn btn-export" onclick="exportCSV('tools')">כלים</button><button class="btn btn-export" onclick="exportCSV('borrowers')">שואלים</button><button class="btn btn-export" onclick="exportCSV('history')">יומן</button><button class="btn btn-export" onclick="exportCSV('free_loans')">חופשיים</button><button class="btn btn-export" style="grid-column: span 2;" onclick="exportCSV('wishlist')">רשימת ביקושים</button>
+                    </div>
+                </div>
+                <div class="section" style="padding: 15px;">
+                    <h4 style="margin: 0 0 12px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; color: var(--text-main); text-align: center;">ייבוא בפורמט CSV</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <button class="btn btn-outline" onclick="triggerImport('tools')">כלים</button><button class="btn btn-outline" onclick="triggerImport('borrowers')">שואלים</button><button class="btn btn-outline" onclick="triggerImport('history')">יומן</button><button class="btn btn-outline" onclick="triggerImport('free_loans')">חופשיים</button><button class="btn btn-outline" style="grid-column: span 2;" onclick="triggerImport('wishlist')">ביקושים</button>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 10px; padding: 16px; border-radius: 12px; border: 1px solid #f8d7da; background: #fffbfa; display: flex; justify-content: space-between; align-items: center; flex: none;">
+                <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 20px;">⚠️</span><span style="font-size: 14px; color: var(--danger); font-weight: bold;">מחיקת כל הנתונים מהמערכת</span></div>
+                <button class="btn btn-danger" style="padding: 8px 20px;" onclick="wipeDatabase()">איפוס מסד נתונים</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- מודאלים -->
+<div id="reportModal" class="modal"><div class="modal-body large">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;"><h3 style="margin:0;">רשימת השאלות פעילות</h3><button onclick="closeM('reportModal')" style="background:none; border:none; font-size: 24px; cursor:pointer; color:var(--text-muted);">✕</button></div>
+    <div class="table-wrap" style="border: 1px solid var(--border-color); border-radius: 8px;"><table id="reportTable"><thead><tr><th style="width:25%;" class="sortable" onclick="setReportSort('borrower')">שם השואל</th><th style="width:25%;" class="sortable" onclick="setReportSort('name')">כלי</th><th style="width:15%;">תיאור</th><th style="width:15%;" class="sortable" onclick="setReportSort('days')">ימים</th><th style="width:20%;">פעולה</th></tr></thead><tbody id="reportTableBody"></tbody></table></div>
+</div></div>
+
+<div id="toolModal" class="modal"><div class="modal-body"><h3>הוספת/עריכת כלי</h3><input type="hidden" id="tmId"><input type="text" id="tmName" placeholder="שם הכלי"><input type="text" id="tmDesc" placeholder="תיאור (אופציונלי)"><input type="text" id="tmSerial" placeholder="מספר סידורי"><input type="number" id="tmCount" placeholder="מונה השאלות התחלתי">
+    <div style="display: flex; gap: 10px; margin-top: 24px;"><button class="btn btn-add" style="flex: 1;" onclick="saveTool()">שמור כלי</button><button class="btn" style="flex: 1; border: 1px solid var(--border-color);" onclick="closeM('toolModal')">ביטול</button></div>
+</div></div>
+
+<div id="borrowerModal" class="modal"><div class="modal-body"><h3>הוספת/עריכת שואל</h3><input type="hidden" id="bmId"><input type="text" id="bmName" placeholder="שם מלא"><input type="text" id="bmPhone" placeholder="טלפון"><input type="text" id="bmAddress" placeholder="כתובת">
+    <div style="display: flex; gap: 10px; margin-top: 24px;"><button class="btn btn-add" style="flex: 1;" onclick="saveBorrower()">שמור שואל</button><button class="btn" style="flex: 1; border: 1px solid var(--border-color);" onclick="closeM('borrowerModal')">ביטול</button></div>
+</div></div>
+
+<div id="toast" class="toast">בוצע!</div>
+
+<script>
+    // --- מנוע ה-SQLite של Tauri ---
+    const DB_NAME = "sqlite:gmach.db";
+    const STORE_NAMES = ["tools", "borrowers", "history", "free_loans", "wishlist"];
+    const SCHEMA = {
+        tools: ['name', 'desc', 'serial', 'status', 'borrower', 'borrowDate', 'borrowCount'],
+        borrowers: ['name', 'phone', 'address'],
+        history: ['date', 'tool', 'desc', 'borrower'],
+        free_loans: ['name', 'borrower', 'borrowDate'],
+        wishlist: ['name', 'count']
+    };
+    let selTool = null, selBorr = null, undoStack = [], reportSort = { col: 'borrower', dir: 'asc' };
+
+    async function tauriInvoke(cmd, args = {}) { return await window.__TAURI__.invoke(cmd, args); }
+
+    async function initDB() {
+        try {
+            await tauriInvoke("plugin:sql|load", { db: DB_NAME });
+            const queries = [
+                "CREATE TABLE IF NOT EXISTS tools (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, desc TEXT, serial TEXT, status TEXT, borrower TEXT, borrowDate INTEGER, borrowCount INTEGER)",
+                "CREATE TABLE IF NOT EXISTS borrowers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, phone TEXT, address TEXT)",
+                "CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, tool TEXT, desc TEXT, borrower TEXT)",
+                "CREATE TABLE IF NOT EXISTS free_loans (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, borrower TEXT, borrowDate INTEGER)",
+                "CREATE TABLE IF NOT EXISTS wishlist (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, count INTEGER)"
+            ];
+            for (let q of queries) await tauriInvoke("plugin:sql|execute", { db: DB_NAME, query: q, values: [] });
+            const lastBackup = localStorage.getItem('gmach_last_backup');
+            if (lastBackup) document.getElementById('lastBackupDisplay').innerText = `גיבוי אחרון בוצע ב: ${lastBackup}`;
+            refreshAll();
+        } catch (e) { console.error("DB Init Error:", e); }
+    }
+
+    const DB = {
+        async getAll(t) { return await tauriInvoke("plugin:sql|select", { db: DB_NAME, query: `SELECT * FROM ${t}`, values: [] }) || []; },
+        async get(t, id) { const r = await tauriInvoke("plugin:sql|select", { db: DB_NAME, query: `SELECT * FROM ${t} WHERE id = ?`, values: [id] }); return r ? r[0] : null; },
+        async add(t, data) { 
+            const k = Object.keys(data); const v = Object.values(data);
+            return await tauriInvoke("plugin:sql|execute", { db: DB_NAME, query: `INSERT INTO ${t} (${k.join(",")}) VALUES (${k.map(()=>"?").join(",")})`, values: v });
+        },
+        async put(t, data) {
+            const id = data.id; const copy = {...data}; delete copy.id;
+            const k = Object.keys(copy); const v = Object.values(copy);
+            return await tauriInvoke("plugin:sql|execute", { db: DB_NAME, query: `UPDATE ${t} SET ${k.map(x=>x+"=?").join(",")} WHERE id = ${id}`, values: v });
+        },
+        async delete(t, id) { return await tauriInvoke("plugin:sql|execute", { db: DB_NAME, query: `DELETE FROM ${t} WHERE id = ?`, values: [id] }); },
+        async clear(t) { return await tauriInvoke("plugin:sql|execute", { db: DB_NAME, query: `DELETE FROM ${t}`, values: [] }); },
+        async bulkAdd(t, items) {
+            if (!items || !items.length) return;
+            const columns = SCHEMA[t];
+            const placeholders = items.map(() => `(${columns.map(()=>"?").join(",")})`).join(",");
+            const values = items.flatMap(item => columns.map(col => {
+                let val = item[col];
+                if (val === undefined || val === null) return (col.includes('Date') || col.includes('Count')) ? 0 : "";
+                return val;
+            }));
+            return await tauriInvoke("plugin:sql|execute", { db: DB_NAME, query: `INSERT INTO ${t} (${columns.join(",")}) VALUES ${placeholders}`, values });
+        }
+    };
+
+    // --- לוגיקה מקורית ---
+    const esc = (s) => s ? String(s).replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[m])) : '';
+    const calcDays = (ts) => ts ? Math.floor((Date.now() - ts) / 86400000) : "-";
+    const showToast = (m) => { const t = document.getElementById("toast"); t.innerText = m; t.style.display = "block"; setTimeout(() => t.style.display = "none", 2000); };
+    const closeM = (id) => document.getElementById(id).style.display = "none";
+    const clearSearch = (id, fn) => { document.getElementById(id).value = ""; fn(); };
+    const checkCan = () => document.getElementById("borrowBtn").disabled = !(selTool && selBorr);
+
+    async function saveForUndo() {
+        const snapshot = {}; for (const s of STORE_NAMES) snapshot[s] = await DB.getAll(s);
+        undoStack.push(structuredClone(snapshot));
+        if (undoStack.length > 10) undoStack.shift();
+        document.getElementById("undoBtn").disabled = false;
+    }
+
+    async function handleUndo() {
+        if (!undoStack.length) return;
+        const snap = undoStack.pop();
+        for (const s of STORE_NAMES) { await DB.clear(s); if(snap[s].length) await DB.bulkAdd(s, snap[s]); }
+        showToast("↩ פעולה בוטלה"); document.getElementById("undoBtn").disabled = !undoStack.length;
+        refreshAll(); if (selBorr) loadActiveLoans(selBorr.name);
+    }
+
+    document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); handleUndo(); } });
+
+    async function refreshAll() {
+        renderOpsTools(); renderOpsBorrowers(); renderManageTools(); renderManageBorrowers(); renderHistory(); renderStatistics(); renderWishlist(); updateHeadStats();
+    }
+
+    async function updateHeadStats() {
+        const tools = await DB.getAll("tools"); const free = await DB.getAll("free_loans"); const hist = await DB.getAll("history");
+        const borrowedCount = tools.filter(t => t.status === 'מושאל').length + free.length;
+        document.getElementById("quick-stats-head").innerText = `סך השאלות: ${hist.length} | בהשאלה: ${borrowedCount}`;
+    }
+
+    async function renderOpsTools() {
+        const q = document.getElementById("toolSearch").value.toLowerCase();
+        let tools = await DB.getAll("tools");
+        tools = tools.filter(t => (t.name||'').toLowerCase().includes(q) || (t.desc||'').toLowerCase().includes(q) || (t.serial||'').toLowerCase().includes(q));
+        tools.sort((a,b) => (a.name||"").localeCompare(b.name||"", 'he'));
+        document.getElementById("opsToolsBody").innerHTML = tools.map(t => {
+            const isSel = selTool && selTool.id === t.id;
+            const rowClass = t.status === 'מושאל' ? 'row-borrowed' : (isSel ? 'selected' : '');
+            return `<tr class="${rowClass}" onclick="selectTool(${t.id})">
+                <td>${esc(t.name)}</td><td>${esc(t.desc)}</td><td>${esc(t.serial)}</td>
+                <td><span class="status-tag ${t.status==='זמין'?'available':'borrowed'}">${t.status}</span></td>
+                <td>${esc(t.borrower || '-')}</td><td>${calcDays(t.borrowDate)}</td></tr>`;
+        }).join("");
+    }
+
+    async function selectTool(id) {
+        const t = await DB.get("tools", id); if (!t || t.status === 'מושאל') return;
+        selTool = t; document.getElementById("selT").innerText = t.name;
+        renderOpsTools(); checkCan();
+    }
+
+    async function renderOpsBorrowers() {
+        const q = document.getElementById("borrSearch").value.toLowerCase();
+        let borrs = await DB.getAll("borrowers");
+        borrs = borrs.filter(b => (b.name||'').toLowerCase().includes(q) || (b.phone||'').includes(q) || (b.address||'').toLowerCase().includes(q));
+        document.getElementById("opsBorrowersBody").innerHTML = borrs.map(b => `
+            <tr class="${(selBorr && selBorr.id === b.id) ? 'selected' : ''}" onclick="selectBorrower(${b.id})">
+                <td>${esc(b.name)}</td><td>${esc(b.address)}</td><td>${esc(b.phone)}</td></tr>`).join("");
+    }
+
+    async function selectBorrower(id) {
+        const b = await DB.get("borrowers", id); if(!b) return; selBorr = b;
+        document.getElementById("selB").innerText = b.name;
+        document.getElementById("activeLoansTitle").innerText = "כלים אצל " + b.name;
+        document.getElementById("addFreeItemBtn").style.display = "block";
+        renderOpsBorrowers(); checkCan(); loadActiveLoans(b.name);
+    }
+
+    async function loadActiveLoans(borrowerName) {
+        const tools = await DB.getAll("tools"); const free = await DB.getAll("free_loans");
+        const active = [...tools.filter(t=>t.borrower===borrowerName).map(t=>({...t, isFree:false})), ...free.filter(f=>f.borrower===borrowerName).map(f=>({...f, isFree:true}))];
+        document.getElementById("activeLoansBody").innerHTML = active.length ? active.map(t => `
+            <tr><td>${esc(t.name)}${t.desc?' ('+esc(t.desc)+')':''} ${t.isFree?'<span class="status-tag free-tag">חופשי</span>':''}</td>
+            <td>${calcDays(t.borrowDate)}</td><td><button class="btn btn-danger" onclick="${t.isFree?'returnFreeLoan':'returnTool'}(${t.id})">החזר</button></td></tr>`).join("") : "<tr><td colspan='3' style='text-align:center;'>אין פריטים</td></tr>";
+    }
+
+    async function confirmBorrow() {
+        await saveForUndo(); selTool.status = "מושאל"; selTool.borrower = selBorr.name; selTool.borrowDate = Date.now(); selTool.borrowCount = (selTool.borrowCount||0)+1;
+        await DB.put("tools", selTool);
+        await DB.add("history", { date: new Date().toLocaleDateString('he-IL'), tool: selTool.name, desc: selTool.desc||"", borrower: selBorr.name });
+        showToast(`${selTool.name} הושאל ל-${selBorr.name}`); selTool = null; document.getElementById("selT").innerText = "-";
+        refreshAll(); loadActiveLoans(selBorr.name); checkCan();
+    }
+
+    async function returnTool(id) {
+        await saveForUndo(); const t = await DB.get("tools", id); if(!t) return;
+        const b = t.borrower; const toolName = t.name;
+        t.status = "זמין"; t.borrower = ""; t.borrowDate = null; await DB.put("tools", t);
+        showToast(`${toolName} הוחזר מ-${b}`);
+        if(document.getElementById("reportModal").style.display === "flex") { document.getElementById("reportTableBody").classList.remove("has-selection"); renderReportTable(); }
+        refreshAll(); if (selBorr?.name === b) loadActiveLoans(b);
+    }
+
+    async function addFreeLoan(btn) {
+        const name = await myPrompt("הכנס את שם הפריט...", btn); if (!name) return;
+        await saveForUndo(); await DB.add("free_loans", { name, borrower: selBorr.name, borrowDate: Date.now() });
+        await DB.add("history", { date: new Date().toLocaleDateString('he-IL'), tool: name+" (חופשי)", desc: "פריט חופשי", borrower: selBorr.name });
+        showToast(`${name} (חופשי) הושאל ל-${selBorr.name}`); loadActiveLoans(selBorr.name); refreshAll();
+    }
+
+    async function returnFreeLoan(id) {
+        await saveForUndo(); const f = await DB.get("free_loans", id); if(!f) return;
+        await DB.delete("free_loans", id); showToast(`${f.name} (חופשי) הוחזר מ-${f.borrower}`);
+        if(document.getElementById("reportModal").style.display === "flex") { document.getElementById("reportTableBody").classList.remove("has-selection"); renderReportTable(); }
+        refreshAll(); if (selBorr) loadActiveLoans(selBorr.name);
+    }
+
+    async function renderManageTools() {
+        const q = document.getElementById("mToolSearch").value.toLowerCase();
+        let tools = await DB.getAll("tools"); tools = tools.filter(t => (t.name||'').toLowerCase().includes(q)).sort((a,b)=>(a.name||"").localeCompare(b.name||"","he"));
+        document.getElementById("manageToolsBody").innerHTML = tools.map(t => `<tr><td>${esc(t.name)}</td><td>${esc(t.desc||'-')}</td><td>${esc(t.serial||'-')}</td><td><button onclick="openToolModal(${t.id})">✎</button> <button class="del-btn" onclick="delItem('tools',${t.id})">✕</button></td></tr>`).join("");
+    }
+
+    async function openToolModal(id=null) {
+        const t = id ? await DB.get("tools", id) : {id:"", name:"", desc:"", serial:"", borrowCount:0};
+        document.getElementById("tmId").value = t.id; document.getElementById("tmName").value = t.name;
+        document.getElementById("tmDesc").value = t.desc || ""; document.getElementById("tmSerial").value = t.serial || "";
+        document.getElementById("tmCount").value = t.borrowCount || 0; document.getElementById("toolModal").style.display = "flex";
+    }
+
+    async function saveTool() {
+        await saveForUndo(); const id = document.getElementById("tmId").value;
+        const tool = { name: document.getElementById("tmName").value, desc: document.getElementById("tmDesc").value, serial: document.getElementById("tmSerial").value, status: "זמין", borrower: "", borrowCount: parseInt(document.getElementById("tmCount").value)||0 };
+        if (id) { tool.id = parseInt(id); const old = await DB.get("tools", tool.id); tool.status = old.status; tool.borrower = old.borrower; tool.borrowDate = old.borrowDate; }
+        await DB.put("tools", tool); closeM('toolModal'); showToast("נשמר בהצלחה"); refreshAll();
+    }
+
+    async function renderManageBorrowers() {
+        const q = document.getElementById("mBorrSearch").value.toLowerCase();
+        let borrs = await DB.getAll("borrowers"); borrs = borrs.filter(b => (b.name||'').toLowerCase().includes(q)).sort((a,b)=>(a.name||"").localeCompare(b.name||"","he"));
+        document.getElementById("manageBorrowersBody").innerHTML = borrs.map(b => `<tr><td>${esc(b.name)}</td><td>${esc(b.address||'-')}</td><td>${esc(b.phone||'-')}</td><td><button onclick="openBorrowerModal(${b.id})">✎</button> <button class="del-btn" onclick="delItem('borrowers',${b.id})">✕</button></td></tr>`).join("");
+    }
+
+    async function openBorrowerModal(id=null) {
+        const b = id ? await DB.get("borrowers", id) : {id:"", name:"", phone:"", address:""};
+        document.getElementById("bmId").value = b.id; document.getElementById("bmName").value = b.name;
+        document.getElementById("bmPhone").value = b.phone || ""; document.getElementById("bmAddress").value = b.address || "";
+        document.getElementById("borrowerModal").style.display = "flex";
+    }
+
+    async function saveBorrower() {
+        await saveForUndo(); const id = document.getElementById("bmId").value;
+        const b = { name: document.getElementById("bmName").value, phone: document.getElementById("bmPhone").value, address: document.getElementById("bmAddress").value };
+        if (id) b.id = parseInt(id); await DB.put("borrowers", b); closeM('borrowerModal'); showToast("נשמר בהצלחה"); refreshAll();
+    }
+
+    async function delItem(store, id) {
+        if (store === 'tools') { const t = await DB.get('tools', id); if (t?.status==='מושאל') { await myAlert("פעולה נחסמה", `לא ניתן למחוק את <b>${t.name}</b> כשהוא מושאל!`); return; } }
+        if (await myConfirm("אישור מחיקה", "האם אתה בטוח שברצונך למחוק פריט זה?")) { await saveForUndo(); await DB.delete(store, id); refreshAll(); showToast("נמחק"); }
+    }
+
+    async function renderHistory() {
+        const q = document.getElementById("histS").value.toLowerCase();
+        let hist = (await DB.getAll("history")).reverse().filter(h => (h.tool||'').toLowerCase().includes(q) || (h.borrower||'').toLowerCase().includes(q));
+        document.getElementById("historyBody").innerHTML = hist.map(h => `<tr><td>${esc(h.borrower)}</td><td>${esc(h.tool)}</td><td>${esc(h.desc||'-')}</td><td>${esc(h.date)}</td></tr>`).join("");
+    }
+
+    async function renderStatistics() {
+        const tools = await DB.getAll("tools"); const stats = {};
+        tools.forEach(t => stats[t.name] = (stats[t.name]||0) + (t.borrowCount||0));
+        document.getElementById("statsBody").innerHTML = Object.entries(stats).sort((a,b)=>b[1]-a[1]).map(([n,c]) => `<tr><td>${esc(n)}</td><td><span class="status-tag available">${c}</span></td></tr>`).join("");
+    }
+
+    async function renderWishlist() {
+        const q = document.getElementById("wishInput").value.toLowerCase();
+        let list = (await DB.getAll("wishlist")).filter(i => !q || i.name.toLowerCase().includes(q)).sort((a,b)=>b.count-a.count);
+        document.getElementById("wishlistBody").innerHTML = list.map(i => `<tr><td>${esc(i.name)}</td><td><span class="status-tag ${i.count>2?'borrowed':'available'}">${i.count}</span></td><td><button class="del-btn" onclick="delItem('wishlist',${i.id})">✕</button></td></tr>`).join("");
+    }
+
+    async function addToWishlist() {
+        const inp = document.getElementById("wishInput"); const name = inp.value.trim(); if (!name) return;
+        await saveForUndo(); const list = await DB.getAll("wishlist"); const ex = list.find(i => i.name.toLowerCase()===name.toLowerCase());
+        if (ex) { ex.count++; await DB.put("wishlist", ex); } else { await DB.add("wishlist", {name, count:1}); }
+        inp.value = ""; renderWishlist();
+    }
+
+    async function openReportModal() { document.getElementById("reportModal").style.display = "flex"; renderReportTable(); }
+    async function renderReportTable() {
+        const tools = (await DB.getAll("tools")).filter(t => t.status === 'מושאל').map(t => ({...t, type:'cat'}));
+        const free = (await DB.getAll("free_loans")).map(f => ({...f, type:'free', desc:''}));
+        let all = [...tools, ...free];
+        all.sort((a,b) => {
+            let vA, vB; if (reportSort.col==='days') { vA=a.borrowDate||0; vB=b.borrowDate||0; } else { vA=(a[reportSort.col]||"").toString().toLowerCase(); vB=(b[reportSort.col]||"").toString().toLowerCase(); }
+            return reportSort.dir==='asc' ? (vA<vB?-1:1) : (vA>vB?-1:1);
+        });
+        document.getElementById("reportTableBody").innerHTML = all.map(l => `<tr onclick="toggleRowFocus(this, event)"><td><b>${esc(l.borrower)}</b></td><td>${esc(l.name)}</td><td>${esc(l.desc||'-')}</td><td>${calcDays(l.borrowDate)} ימים</td><td><button class="btn btn-danger" onclick="${l.type==='cat'?'returnTool':'returnFreeLoan'}(${l.id}); renderReportTable();">החזר</button></td></tr>`).join("");
+    }
+    function setReportSort(col) { if(reportSort.col===col) reportSort.dir=reportSort.dir==='asc'?'desc':'asc'; else {reportSort.col=col; reportSort.dir='asc';} renderReportTable(); }
+    function toggleRowFocus(row, event) { if(event.target.tagName==='BUTTON') return; const isFocused = row.classList.contains("focused-row"); document.querySelectorAll("#reportTableBody tr").forEach(r=>r.classList.remove("focused-row")); if(!isFocused){row.classList.add("focused-row"); document.getElementById("reportTableBody").classList.add("has-selection");} else {document.getElementById("reportTableBody").classList.remove("has-selection");} }
+
+    async function exportFullBackupJSON() {
+        const data = {}; for (const s of STORE_NAMES) data[s] = await DB.getAll(s);
+        const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:"application/json"}));
+        const now = new Date(); a.download = `גיבוי_גמח_${now.toLocaleDateString('he-IL')}.json`; a.click();
+        const backupText = `${now.toLocaleDateString('he-IL')} בשעה ${now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}`;
+        localStorage.setItem('gmach_last_backup', backupText); document.getElementById('lastBackupDisplay').innerText = `גיבוי אחרון בוצע ב: ${backupText}`;
+    }
+
+    async function wipeDatabase() {
+        if (await myConfirm("⚠️ סכנת מחיקת נתונים", "האם אתה בטוח שברצונך למחוק את כל מסד הנתונים? לא ניתן יהיה לשחזר את המידע!")) {
+            const confirmWord = await myPrompt("הקלד את המילה 'מחק' כדי לאשר");
+            if (confirmWord === 'מחק') {
+                await saveForUndo(); 
+                for (const s of STORE_NAMES) await DB.clear(s); 
+                showToast("כל הנתונים נמחקו בהצלחה"); 
+                refreshAll();
+            } else if (confirmWord !== null) {
+                showToast("המילה שהוקלדה שגויה. המחיקה בוטלה.");
+            }
+        }
+    }
+
+    async function exportCSV(t) {
+        const d = await DB.getAll(t); if(!d.length) { showToast("אין נתונים"); return; }
+        const h = Object.keys(d[0]); const csv = "\uFEFF" + h.join(",") + "\n" + d.map(r=>h.map(k=>`"${String(r[k]||'').replace(/"/g,'""')}"`).join(",")).join("\n");
+        const a = document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`${t}.csv`; a.click();
+    }
+
+    function triggerImport(t) { const i = document.createElement("input"); i.type="file"; i.accept=".csv"; i.onchange=(e)=>processImportFile(e.target.files[0], t); i.click(); }
+    function triggerFullImport() { const i = document.createElement("input"); i.type="file"; i.accept=".json"; i.onchange=async(e)=>{
+        if(!e.target.files[0])return; if(await myConfirm("ייבוא גיבוי","⚠️ אזהרה: כל המידע הקיים יימחק. להמשיך?")) {
+            const r=new FileReader(); r.onload=async(ev)=>{
+                try {
+                    const data=JSON.parse(ev.target.result);
+                    for(const s of STORE_NAMES) {
+                        if(data[s] && data[s].length) {
+                            await DB.clear(s);
+                            const cleanItems = data[s].map(item => {
+                                const newItem = {};
+                                SCHEMA[s].forEach(col => { newItem[col] = (item[col] !== undefined && item[col] !== null) ? item[col] : ( (col.includes('Date') || col.includes('Count')) ? 0 : "" ); });
+                                return newItem;
+                            });
+                            await DB.bulkAdd(s, cleanItems);
+                        }
+                    }
+                    refreshAll(); showToast("שוחזר בהצלחה");
+                } catch(err) { alert("שגיאה בייבוא: " + err.message); }
+            }; r.readAsText(e.target.files[0]);
+        }
+    }; i.click(); }
+
+    async function processImportFile(f, t) {
+        if(!f)return; await saveForUndo(); const r=new FileReader(); r.onload=async(e)=>{
+            const lines=e.target.result.split(/\r?\n/).filter(l=>l.trim()!=="");
+            const items = [];
+            for(let i=1;i<lines.length;i++){
+                const c=lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s=>s.replace(/^"|"$/g,'').replace(/""/g,'"').trim());
+                if(t==='tools') items.push({name:c[0],desc:c[1],status:c[2]||"זמין",borrower:c[3],serial:c[6]||c[4],borrowCount:parseInt(c[5])||0});
+                else if(t==='borrowers') items.push({name:c[0],phone:c[1],address:c[2]});
+                else if(t==='history') items.push({date:c[0],tool:c[1],desc:c[2],borrower:c[3]});
+                else if(t==='free_loans') items.push({name:c[0],borrower:c[1],borrowDate:parseInt(c[2])||Date.now()});
+                else if(t==='wishlist') items.push({name:c[0],count:parseInt(c[1])||1});
+            }
+            if(items.length) await DB.bulkAdd(t, items); refreshAll(); showToast("ייבוא הושלם");
+        }; r.readAsText(f);
+    }
+
+    function myConfirm(t, m) {
+        return new Promise(resolve => {
+            const overlay = document.createElement('div'); overlay.className = 'modal'; overlay.style.display = 'flex';
+            overlay.innerHTML = `<div class="modal-body" style="text-align:center; width:320px;"><h3>${t}</h3><p style="color:var(--text-muted);">${m}</p><div style="display:flex; gap:12px;"><button id="cY" class="btn" style="flex:1; background:var(--danger); color:white;">אישור</button><button id="cN" class="btn" style="flex:1; border:1px solid var(--border-color);">ביטול</button></div></div>`;
+            document.body.appendChild(overlay);
+            overlay.querySelector('#cY').onclick = () => { overlay.remove(); resolve(true); };
+            overlay.querySelector('#cN').onclick = () => { overlay.remove(); resolve(false); };
+        });
+    }
+
+    function myPrompt(p, a = null) {
+        return new Promise(resolve => {
+            const overlay = document.createElement('div'); overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999;";
+            const div = document.createElement('div'); let s = "position:fixed; background:white; padding:10px; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.2); border:1px solid #ccc; display:flex; gap:8px; width:300px; z-index:10000;";
+            if (a) { const r = a.getBoundingClientRect(); s += `bottom:${window.innerHeight - r.top + 10}px; left:${r.left}px;`; } else { s += "bottom:20px; left:20px;"; }
+            div.style = s; div.innerHTML = `<input id="pInp" placeholder="${p}" style="flex:1; padding:8px; border:1px solid #ddd; border-radius:6px; outline:none;"><button id="pBtn" class="btn btn-main">אישור</button>`;
+            overlay.appendChild(div); document.body.appendChild(overlay);
+            const inp = div.querySelector('#pInp'); setTimeout(() => inp.focus(), 50);
+            const close = (v) => { overlay.remove(); resolve(v); };
+            overlay.onclick = (e) => { if (e.target === overlay) close(null); };
+            div.querySelector('#pBtn').onclick = () => close(inp.value.trim() || null);
+            inp.onkeydown = (e) => { if (e.key === 'Enter') close(inp.value.trim() || null); if (e.key === 'Escape') close(null); };
+        });
+    }
+
+    function myAlert(t, m) {
+        return new Promise(resolve => {
+            const overlay = document.createElement('div'); overlay.className = 'modal'; overlay.style.display = 'flex';
+            overlay.innerHTML = `<div class="modal-body" style="text-align:center; width:320px;"><h3>${t}</h3><p style="color:var(--text-muted);">${m}</p><button id="aO" class="btn btn-main" style="width:100%;">הבנתי</button></div>`;
+            document.body.appendChild(overlay);
+            const close = () => { overlay.remove(); resolve(); };
+            overlay.querySelector('#aO').onclick = close; overlay.onclick = (e) => { if(e.target === overlay) close(); };
+        });
+    }
+
+    function switchTab(id) { document.querySelectorAll('.tab-pane, .tab-btn').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(id)); if(btn) btn.classList.add('active'); refreshAll(); }
+
+    window.onload = initDB;
+</script>
+</body>
+</html>

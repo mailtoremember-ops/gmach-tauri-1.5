@@ -1,0 +1,34 @@
+{
+  "build": {
+    "distDir": "../ui",
+    "devPath": "../ui",
+    "beforeBuildCommand": "",
+    "withGlobalTauri": true
+  },
+  "package": {
+    "productName": "GmachTools",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": true
+    },
+    "bundle": {
+      "active": false,
+      "identifier": "com.gmach.tools",
+      "icon": ["icon.ico"]
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 700,
+        "resizable": true,
+        "title": "גמ\"ח כלי עבודה",
+        "width": 1000
+      }
+    ]
+  }
+}
