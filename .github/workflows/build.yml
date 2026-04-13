@@ -11,6 +11,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install Minifier
+        run: npm install -g html-minifier-terser
+
+      - name: Minify Frontend
+        # דחיסה אגרסיבית של HTML, CSS ו-JavaScript
+        # זה מקצר את זמן הטעינה של ה-WebView2 ומציג את החלון מהר יותר
+        run: |
+          html-minifier-terser --collapse-whitespace --remove-comments --minify-js true --minify-css true ui/index.html -o ui/index.html
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -26,12 +40,12 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: "Gmach Tools v__VERSION__"
-          releaseBody: "גרסה יציבה ואופטימלית של גמ\"ח כלי עבודה."
+          releaseBody: "גרסה סופית ואופטימלית: Event-based Reveal, דחיסת Frontend וביצועי Rust מקסימליים."
           releaseDraft: false
           prerelease: false
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Gmach-Tools-Installers
-          path: src-tauri/target/release/bundle/msi/*.msi
+          name: Gmach-Tools-Exe
+          path: src-tauri/target/release/*.exe
