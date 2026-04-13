@@ -11,10 +11,18 @@ tauri-build = { version = "1.5", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.5", features = [ "shell-open"] }
-# הוספתי כאן את החלק של ה-features = ["sqlite"]
+tauri = { version = "1.5", features = ["shell-open"] }
 tauri-plugin-sql = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1", features = ["sqlite"] }
 
 [features]
-default = [ "custom-protocol" ]
-custom-protocol = [ "tauri/custom-protocol" ]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+# --- הגדרות אופטימיזציה למקסימום ביצועים ---
+[profile.release]
+opt-level = 3           # מהירות ריצה מקסימלית
+lto = "fat"             # אופטימיזציה עמוקה בין כל רכיבי הקוד
+codegen-units = 1       # מאפשר קומפילציה אחידה לביצועים טובים יותר
+panic = "abort"         # הקטנת משקל ושיפור קל במהירות (מבטל stack unwinding)
+strip = true            # מסיר מידע מיותר מה-EXE שמיועד רק למפתחים
+incremental = false     # מבטיח בנייה נקייה ואופטימלית ב-Release
