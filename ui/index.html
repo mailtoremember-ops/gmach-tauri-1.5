@@ -566,7 +566,7 @@
     }
 
     async function wipeDatabase() {
-        if (await myConfirm("⚠️ סכנת מחיקת נתונים", "האם אתה בטוח שברצונך למחוק את כל מסד הנתונים? לא ניתן יהיה לשחזר את המידע!")) {
+        if (await myConfirm("מחיקת נתונים", "האם למחוק את כל מסד הנתונים?")) {
             const confirmWord = await myPrompt("הקלד את המילה 'מחק' כדי לאשר");
             if (confirmWord === 'מחק') {
                 await saveForUndo(); 
@@ -587,7 +587,7 @@
 
     function triggerImport(t) { const i = document.createElement("input"); i.type="file"; i.accept=".csv"; i.onchange=(e)=>processImportFile(e.target.files[0], t); i.click(); }
     function triggerFullImport() { const i = document.createElement("input"); i.type="file"; i.accept=".json"; i.onchange=async(e)=>{
-        if(!e.target.files[0])return; if(await myConfirm("ייבוא גיבוי","⚠️ אזהרה: כל המידע הקיים יימחק. להמשיך?")) {
+        if(!e.target.files[0])return; if(await myConfirm("ייבוא גיבוי","אזהרה: כל המידע הקיים יימחק. להמשיך?")) {
             const r=new FileReader(); r.onload=async(ev)=>{
                 try {
                     const data=JSON.parse(ev.target.result);
